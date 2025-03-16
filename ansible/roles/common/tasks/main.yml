@@ -1,0 +1,55 @@
+---
+- name: Set hostname
+  hostname:
+    name: "{{ hostname_prefix }}{{ inventory_hostname.split('server')[1] }}"
+
+- name: Configure static IP
+  nmcli:
+    conn_name: "eth0"
+    type: ethernet
+    ip4: "{{ static_ip }}/24"
+    gw4: "{{ gateway }}"
+    state: present
+  notify: Restart network
+
+- name: Update /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ static_ip }} {{ hostname_prefix }}{{ inventory_hostname.split('server')[1] }}"
+    state: present
+
+- name: Configure SSH settings
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - { regexp: "^PasswordAuthentication", line: "PasswordAuthentication no" }
+    - { regexp: "^PubkeyAuthentication", line: "PubkeyAuthentication yes" }
+    - { regexp: "^PermitRootLogin", line: "PermitRootLogin no" }
+  notify: Restart SSH
+
+- name: Create users
+  user:
+    name: "{{ item.username }}"
+    shell: /bin/bash
+    state: present
+  loop: "{{ new_users }}"
+
+- name: Add SSH public keys for users
+  authorized_key:
+    user: "{{ item.username }}"
+    key: "{{ item.pub_key }}"
+    state: present
+  loop: "{{ new_users }}"
+
+handlers:
+  - name: Restart SSH
+    service:
+      name: sshd
+      state: restarted
+
+  - name: Restart network
+    service:
+      name: NetworkManager
+      state: restarted

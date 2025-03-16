@@ -1,0 +1,41 @@
+---
+- name: Check for second disk
+  command: lsblk -dn -o NAME | grep -v sda
+  register: second_disk
+  changed_when: false
+  failed_when: false
+
+- name: Configure LVM when second disk exists
+  when: second_disk.stdout != ""
+  block:
+    - name: Create physical volume
+      command: pvcreate /dev/{{ second_disk.stdout }}
+      args:
+        creates: /dev/{{ second_disk.stdout }}
+
+    - name: Create volume group
+      command: vgcreate vg_data /dev/{{ second_disk.stdout }}
+      args:
+        creates: /dev/vg_data
+
+    - name: Create logical volume
+      command: lvcreate -L 10G -n lv_data vg_data
+      args:
+        creates: /dev/vg_data/lv_data
+
+    - name: Format logical volume
+      filesystem:
+        fstype: ext4
+        dev: /dev/vg_data/lv_data
+
+    - name: Ensure mount directory exists
+      file:
+        path: /data
+        state: directory
+
+    - name: Mount logical volume
+      mount:
+        path: /data
+        src: /dev/vg_data/lv_data
+        fstype: ext4
+        state: mounted

@@ -1,0 +1,7 @@
+- hosts: gitlab_server
+  become: yes
+  tasks:
+    - name: Install GitLab
+      shell: |
+        curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | bash
+        EXTERNAL_URL="http://gitlab.example.com" apt-get install -y gitlab-ee

@@ -1,0 +1,26 @@
+---
+- name: Install fail2ban
+  package:
+    name: fail2ban
+    state: present
+
+- name: Copy fail2ban configuration
+  template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart fail2ban
+
+- name: Ensure fail2ban is running
+  service:
+    name: fail2ban
+    state: started
+    enabled: yes
+
+handlers:
+  - name: Restart fail2ban
+    service:
+      name: fail2ban
+      state: restarted

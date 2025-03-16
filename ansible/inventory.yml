@@ -1,0 +1,18 @@
+all:
+  hosts:
+    server1:
+      ansible_host: <IP>
+    gitlab_server:
+      ansible_host: <IP>
+    masters:
+      children:
+        master1:
+          ansible_host: <IP>
+        master2:
+          ansible_host: <IP>
+        master3:
+          ansible_host: <IP>
+    workers:
+      children:
+        worker1:
+          ansible_host: <IP>

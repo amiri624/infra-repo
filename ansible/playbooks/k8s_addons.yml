@@ -1,0 +1,6 @@
+- hosts: masters[0]
+  tasks:
+    - name: Install Helm
+      shell: curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+    - name: Install Nginx Ingress
+      shell: helm install ingress-nginx ingress-nginx/ingress-nginx

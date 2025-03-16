@@ -1,0 +1,9 @@
+- hosts: masters
+  become: yes
+  tasks:
+    - name: Install Kubernetes tools
+      shell: |
+        apt-get update && apt-get install -y docker.io kubeadm kubectl kubelet
+    - name: Initialize cluster (first master)
+      shell: kubeadm init --pod-network-cidr=10.244.0.0/16
+      when: inventory_hostname == groups['masters'][0]
