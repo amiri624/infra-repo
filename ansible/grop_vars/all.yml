@@ -1,5 +1,5 @@
 hostname_prefix: "server"
-static_ip: "192.168.1.{{ inventory_hostname.split('server')[1] }}"
+static_ip: "192.168.122.88{{ inventory_hostname.split('server')[1] }}"
 gateway: "192.168.1.1"
 new_users:
   - username: "user1"
