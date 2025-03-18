@@ -1,1 +1,36 @@
-1
+stages:
+  - build
+  - deploy
+
+build_tools:
+  stage: build
+  image: docker
+  services:
+    - docker:dind
+  script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+    - docker build -t yourusername/devops-tools:latest -f docker/Dockerfile .
+    - docker push yourusername/devops-tools:latest
+
+deploy_stage:
+  stage: deploy
+  image: yourusername/devops-tools
+  script:
+    - ansible-playbook ansible/playbooks/server_config.yml -i ansible/inventory.yml
+    - ansible-playbook ansible/playbooks/gitlab.yml -i ansible/inventory.yml
+    - ansible-playbook ansible/playbooks/k8s_cluster.yml -i ansible/inventory.yml
+    - ansible-playbook ansible/playbooks/k8s_addons.yml -i ansible/inventory.yml
+  only:
+    - stage
+
+deploy_prod:
+  stage: deploy
+  image: yourusername/devops-tools
+  script:
+    - ansible-playbook ansible/playbooks/server_config.yml -i ansible/inventory.yml
+    - ansible-playbook ansible/playbooks/gitlab.yml -i ansible/inventory.yml
+    - ansible-playbook ansible/playbooks/k8s_cluster.yml -i ansible/inventory.yml
+    - ansible-playbook ansible/playbooks/k8s_addons.yml -i ansible/inventory.yml
+  when: manual
+  only:
+    - tags
